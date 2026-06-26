@@ -12,6 +12,8 @@ type service struct {
 
 type Service interface {
 	CreateParkingZone(req *dto.CreateParkingZoneRequest) (*dto.ParkingZoneResponse, error)
+	GetAllParkingZones() ([]dto.ParkingZoneResponse, error)
+	GetParkingZoneByID(id uint) (*dto.ParkingZoneResponse, error)
 }
 
 func NewService(repo Repository, jwtService auth.JWTService) Service {
@@ -45,31 +47,39 @@ func (s *service) CreateParkingZone(req *dto.CreateParkingZoneRequest) (*dto.Par
 
 }
 
-// func (s *service) LoginUser(req *dto.UserLoginRequest) (*dto.LoginResponse, error) {
-// 	user, err := s.repo.GetUserByEmail(req.Email)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (s *service) GetAllParkingZones() ([]dto.ParkingZoneResponse, error) {
+	parkingZones, err := s.repo.GetAllParkingZones()
+	if err != nil {
+		return nil, err
+	}
+	var res []dto.ParkingZoneResponse
+	for _, parkingZone := range parkingZones {
+		res = append(res, dto.ParkingZoneResponse{
+			Id:            parkingZone.ID,
+			Name:          parkingZone.Name,
+			Type:          parkingZone.Type,
+			TotalCapacity: parkingZone.TotalCapacity,
+			PricePerHour:  parkingZone.PricePerHour,
+			CreatedAt:     parkingZone.CreatedAt.Format("2006-01-02T15:04:05Z"),
+			UpdatedAt:     parkingZone.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		})
+	}
+	return res, nil
+}
 
-// 	// Verify the password
-// 	if !user.CheckPassword(req.Password) {
-// 		return nil, ErrorUserNotFound
-// 	}
-
-// 	// Generate a JWT token
-// 	token, err := s.jwtService.GenerateToken(user.ID, user.Email, user.Name, user.Role)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	res := dto.LoginResponse{
-// 		Token: token,
-// 		User: dto.UserData{
-// 			Id:    user.ID,
-// 			Name:  user.Name,
-// 			Email: user.Email,
-// 			Role:  user.Role,
-// 		},
-// 	}
-// 	return &res, nil
-// }
+func (s *service) GetParkingZoneByID(id uint) (*dto.ParkingZoneResponse, error) {
+	parkingZone, err := s.repo.GetParkingZoneByID(id)
+	if err != nil {
+		return nil, err
+	}
+	res := dto.ParkingZoneResponse{
+		Id:            parkingZone.ID,
+		Name:          parkingZone.Name,
+		Type:          parkingZone.Type,
+		TotalCapacity: parkingZone.TotalCapacity,
+		PricePerHour:  parkingZone.PricePerHour,
+		CreatedAt:     parkingZone.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		UpdatedAt:     parkingZone.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+	}
+	return &res, nil
+}

@@ -9,6 +9,8 @@ type repository struct {
 }
 type Repository interface {
 	CreateParkingZone(parkingZone *ParkingZone) error
+	GetAllParkingZones() ([]ParkingZone, error)
+	GetParkingZoneByID(id uint) (*ParkingZone, error)
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -21,15 +23,20 @@ func (r *repository) CreateParkingZone(parkingZone *ParkingZone) error {
 	result := r.db.Create(parkingZone)
 	return result.Error
 }
+func (r *repository) GetAllParkingZones() ([]ParkingZone, error) {
+	var parkingZones []ParkingZone
+	result := r.db.Find(&parkingZones)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return parkingZones, nil
+}
 
-// func (r *repository) GetUserByEmail(email string) (*User, error) {
-// 	var user User
-// 	result := r.db.Where("email = ?", email).First(&user)
-// 	if result.Error != nil {
-// 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-// 			return nil, ErrorUserNotFound // User not found
-// 		}
-// 		return nil, result.Error // Other database error
-// 	}
-// 	return &user, nil
-// }
+func (r *repository) GetParkingZoneByID(id uint) (*ParkingZone, error) {
+	var parkingZone ParkingZone
+	result := r.db.First(&parkingZone, id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &parkingZone, nil
+}

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"spotsync/internal/domain/parking/dto"
 	"spotsync/internal/httpResponse"
+	"strconv"
 
 	"github.com/labstack/echo/v5"
 )
@@ -14,6 +15,8 @@ type handler struct {
 
 type Handler interface {
 	CreateParkingZone(c *echo.Context) error
+	GetAllParkingZones(c *echo.Context) error
+	GetParkingZoneByID(c *echo.Context) error
 }
 
 func NewHandler(service Service) Handler {
@@ -56,36 +59,46 @@ func (h *handler) CreateParkingZone(c *echo.Context) error {
 	})
 }
 
-// func (h *handler) LoginUser(c *echo.Context) error {
-// 	var req dto.UserLoginRequest
-// 	if err := c.Bind(&req); err != nil {
-// 		return c.JSON(http.StatusBadRequest, httpResponse.Error{
-// 			Success: false,
-// 			Message: "Invalid request payload",
-// 			Errors:  err.Error(),
-// 		})
-// 	}
+func (h *handler) GetAllParkingZones(c *echo.Context) error {
+	res, err := h.service.GetAllParkingZones()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, httpResponse.Error{
+			Success: false,
+			Message: "Failed to get parking zones",
+			Errors:  err.Error(),
+		})
+	}
 
-// 	if err := c.Validate(&req); err != nil {
-// 		return c.JSON(http.StatusBadRequest, httpResponse.Error{
-// 			Success: false,
-// 			Message: "Validation failed",
-// 			Errors:  err.Error(),
-// 		})
-// 	}
+	return c.JSON(200, httpResponse.Success{
+		Success: true,
+		Message: "Parking zones retrieved successfully",
+		Data:    res,
+	})
+}
 
-// 	res, err := h.service.LoginUser(&req)
-// 	if err != nil {
-// 		return c.JSON(http.StatusUnauthorized, httpResponse.Error{
-// 			Success: false,
-// 			Message: "Login failed",
-// 			Errors:  err.Error(),
-// 		})
-// 	}
+func (h *handler) GetParkingZoneByID(c *echo.Context) error {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, httpResponse.Error{
+			Success: false,
+			Message: "Invalid parking zone ID",
+			Errors:  err.Error(),
+		})
+	}
 
-// 	return c.JSON(200, httpResponse.Success{
-// 		Success: true,
-// 		Message: "Login successful",
-// 		Data:    res,
-// 	})
-// }
+	res, err := h.service.GetParkingZoneByID(uint(id))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, httpResponse.Error{
+			Success: false,
+			Message: "Failed to get parking zone",
+			Errors:  err.Error(),
+		})
+	}
+
+	return c.JSON(200, httpResponse.Success{
+		Success: true,
+		Message: "Parking zone retrieved successfully",
+		Data:    res,
+	})
+}

@@ -17,4 +17,6 @@ func RegisterRoutes(e *echo.Echo, db *gorm.DB, env *config.Env) {
 
 	api := e.Group("/api/v1/zones")
 	api.POST("", handler.CreateParkingZone, middlewares.AuthMiddleware(jwtService, "admin"))
+	api.GET("", handler.GetAllParkingZones)
+	api.GET("/:id", handler.GetParkingZoneByID)
 }
