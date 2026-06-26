@@ -14,6 +14,7 @@ type handler struct {
 
 type Handler interface {
 	RegisterUser(c *echo.Context) error
+	LoginUser(c *echo.Context) error
 }
 
 func NewHandler(service Service) Handler {
@@ -28,7 +29,7 @@ func (h *handler) RegisterUser(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, httpResponse.Error{
 			Success: false,
 			Message: "Invalid request payload",
-			Errors:  err,
+			Errors:  err.Error(),
 		})
 	}
 
@@ -36,7 +37,7 @@ func (h *handler) RegisterUser(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, httpResponse.Error{
 			Success: false,
 			Message: "Validation failed",
-			Errors:  err,
+			Errors:  err.Error(),
 		})
 	}
 
@@ -45,13 +46,46 @@ func (h *handler) RegisterUser(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, httpResponse.Error{
 			Success: false,
 			Message: "Failed to register user",
-			Errors:  err,
+			Errors:  err.Error(),
 		})
 	}
 
 	return c.JSON(201, httpResponse.Success{
 		Success: true,
 		Message: "User registered successfully",
+		Data:    res,
+	})
+}
+func (h *handler) LoginUser(c *echo.Context) error {
+	var req dto.UserLoginRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, httpResponse.Error{
+			Success: false,
+			Message: "Invalid request payload",
+			Errors:  err.Error(),
+		})
+	}
+
+	if err := c.Validate(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, httpResponse.Error{
+			Success: false,
+			Message: "Validation failed",
+			Errors:  err.Error(),
+		})
+	}
+
+	res, err := h.service.LoginUser(&req)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, httpResponse.Error{
+			Success: false,
+			Message: "Login failed",
+			Errors:  err.Error(),
+		})
+	}
+
+	return c.JSON(200, httpResponse.Success{
+		Success: true,
+		Message: "Login successful",
 		Data:    res,
 	})
 }
