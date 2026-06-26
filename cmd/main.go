@@ -7,8 +7,10 @@ import (
 
 func main() {
 	env := config.LoadEnv()
+	// Configure postgres database connection
+	db := config.ConnectDatabase(env)
 
 	// Start the server
-	server.Start(env)
+	server.Start(db, env)
 
 }

@@ -9,6 +9,7 @@ import (
 
 type Env struct {
 	Port string
+	Dsn  string
 }
 
 func LoadEnv() *Env {
@@ -19,5 +20,6 @@ func LoadEnv() *Env {
 	}
 	return &Env{
 		Port: os.Getenv("PORT"),
+		Dsn:  os.Getenv("DSN"),
 	}
 }
