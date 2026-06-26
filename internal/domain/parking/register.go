@@ -3,6 +3,7 @@ package parking
 import (
 	"spotsync/internal/auth"
 	"spotsync/internal/config"
+	"spotsync/internal/middlewares"
 
 	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"
@@ -14,7 +15,6 @@ func RegisterRoutes(e *echo.Echo, db *gorm.DB, env *config.Env) {
 	service := NewService(repo, jwtService)
 	handler := NewHandler(service)
 
-	api := e.Group("/api/v1/auth")
-	api.POST("/register", handler.RegisterUser)
-	api.POST("/login", handler.LoginUser)
+	api := e.Group("/api/v1/zones")
+	api.POST("", handler.CreateParkingZone, middlewares.AuthMiddleware(jwtService, "admin"))
 }

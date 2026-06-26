@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DefaultTokenDuration = 24 * 7 * 60 * 60 // 7 days in seconds
+	DefaultTokenDuration = 7 * 24 * time.Hour
 )
 
 type JWTClaims struct {

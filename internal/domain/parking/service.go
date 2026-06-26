@@ -2,7 +2,7 @@ package parking
 
 import (
 	"spotsync/internal/auth"
-	"spotsync/internal/domain/user/dto"
+	"spotsync/internal/domain/parking/dto"
 )
 
 type service struct {
@@ -11,8 +11,7 @@ type service struct {
 }
 
 type Service interface {
-	RegisterUser(user *dto.UserCreateRequest) (*dto.UserResponse, error)
-	LoginUser(user *dto.UserLoginRequest) (*dto.LoginResponse, error)
+	CreateParkingZone(req *dto.CreateParkingZoneRequest) (*dto.ParkingZoneResponse, error)
 }
 
 func NewService(repo Repository, jwtService auth.JWTService) Service {
@@ -22,56 +21,55 @@ func NewService(repo Repository, jwtService auth.JWTService) Service {
 	}
 }
 
-func (s *service) RegisterUser(req *dto.UserCreateRequest) (*dto.UserResponse, error) {
-	user := User{
-		Name:     req.Name,
-		Email:    req.Email,
-		Password: req.Password,
-		Role:     req.Role,
+func (s *service) CreateParkingZone(req *dto.CreateParkingZoneRequest) (*dto.ParkingZoneResponse, error) {
+	parkingZone := ParkingZone{
+		Name:          req.Name,
+		Type:          req.Type,
+		TotalCapacity: req.TotalCapacity,
+		PricePerHour:  req.PricePerHour,
 	}
-	// Hash the password before saving to the database
-	user.HashPassword()
-
-	err := s.repo.RegisterUser(&user)
+	err := s.repo.CreateParkingZone(&parkingZone)
 	if err != nil {
 		return nil, err
 	}
-
-	res := dto.UserResponse{
-		Id:        user.ID,
-		Name:      user.Name,
-		Email:     user.Email,
-		Role:      user.Role,
-		CreatedAt: user.CreatedAt.Format("2006-01-02 15:04:05"),
-		UpdatedAt: user.UpdatedAt.Format("2006-01-02 15:04:05"),
+	res := dto.ParkingZoneResponse{
+		Id:            parkingZone.ID,
+		Name:          parkingZone.Name,
+		Type:          parkingZone.Type,
+		TotalCapacity: parkingZone.TotalCapacity,
+		PricePerHour:  parkingZone.PricePerHour,
+		CreatedAt:     parkingZone.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		UpdatedAt:     parkingZone.UpdatedAt.Format("2006-01-02T15:04:05Z"),
 	}
 	return &res, nil
+
 }
-func (s *service) LoginUser(req *dto.UserLoginRequest) (*dto.LoginResponse, error) {
-	user, err := s.repo.GetUserByEmail(req.Email)
-	if err != nil {
-		return nil, err
-	}
 
-	// Verify the password
-	if !user.CheckPassword(req.Password) {
-		return nil, ErrorUserNotFound
-	}
+// func (s *service) LoginUser(req *dto.UserLoginRequest) (*dto.LoginResponse, error) {
+// 	user, err := s.repo.GetUserByEmail(req.Email)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	// Generate a JWT token
-	token, err := s.jwtService.GenerateToken(user.ID, user.Email, user.Name, user.Role)
-	if err != nil {
-		return nil, err
-	}
+// 	// Verify the password
+// 	if !user.CheckPassword(req.Password) {
+// 		return nil, ErrorUserNotFound
+// 	}
 
-	res := dto.LoginResponse{
-		Token: token,
-		User: dto.UserData{
-			Id:    user.ID,
-			Name:  user.Name,
-			Email: user.Email,
-			Role:  user.Role,
-		},
-	}
-	return &res, nil
-}
+// 	// Generate a JWT token
+// 	token, err := s.jwtService.GenerateToken(user.ID, user.Email, user.Name, user.Role)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	res := dto.LoginResponse{
+// 		Token: token,
+// 		User: dto.UserData{
+// 			Id:    user.ID,
+// 			Name:  user.Name,
+// 			Email: user.Email,
+// 			Role:  user.Role,
+// 		},
+// 	}
+// 	return &res, nil
+// }
