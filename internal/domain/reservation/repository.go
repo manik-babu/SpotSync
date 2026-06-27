@@ -10,8 +10,11 @@ import (
 )
 
 var (
-	ErrParkingZoneNotFound = errors.New("parking zone not found")
-	ErrParkingZoneFull     = errors.New("parking zone is full")
+	ErrParkingZoneNotFound  = errors.New("parking zone not found")
+	ErrParkingZoneFull      = errors.New("parking zone is full")
+	ErrReservationNotFound  = errors.New("reservation not found")
+	ErrReservationNotActive = errors.New("reservation is not active")
+	ErrUnauthorized         = errors.New("unauthorized: you can only cancel your own reservations")
 )
 
 type repository struct {
@@ -23,6 +26,7 @@ type Repository interface {
 	GetReservationByID(id uint) (*Reservation, error)
 	GetAllReservations() ([]Reservation, error)
 	GetMyReservations(userId uint) ([]Reservation, error)
+	CancelReservation(id uint, userId uint) error
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -88,15 +92,6 @@ func (r *repository) GetReservationByID(id uint) (*Reservation, error) {
 	}
 	return &reservation, nil
 }
-
-func (r *repository) GetAllReservations() ([]Reservation, error) {
-	var reservations []Reservation
-	err := r.db.Find(&reservations).Error
-	if err != nil {
-		return nil, err
-	}
-	return reservations, nil
-}
 func (r *repository) GetMyReservations(userId uint) ([]Reservation, error) {
 	var reservations []Reservation
 
@@ -105,6 +100,37 @@ func (r *repository) GetMyReservations(userId uint) ([]Reservation, error) {
 		Preload("Zone").
 		Find(&reservations).Error
 
+	if err != nil {
+		return nil, err
+	}
+	return reservations, nil
+}
+func (r *repository) CancelReservation(id uint, userId uint) error {
+	var reservation Reservation
+	if err := r.db.First(&reservation, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrReservationNotFound
+		}
+		return err
+	}
+	if reservation.UserId != userId {
+		return ErrUnauthorized
+	}
+
+	if reservation.Status != "active" {
+		return ErrReservationNotActive
+	}
+
+	reservation.Status = "cancelled"
+	if err := r.db.Save(&reservation).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+func (r *repository) GetAllReservations() ([]Reservation, error) {
+	var reservations []Reservation
+	err := r.db.Preload("Zone").Preload("User").Find(&reservations).Error
 	if err != nil {
 		return nil, err
 	}

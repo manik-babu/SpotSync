@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"spotsync/internal/domain/reservation/dto"
 	"spotsync/internal/httpResponse"
+	"strconv"
 
 	"github.com/labstack/echo/v5"
 )
@@ -16,6 +17,8 @@ type handler struct {
 type Handler interface {
 	CreateReservation(c *echo.Context) error
 	GetMyReservations(c *echo.Context) error
+	CancelReservation(c *echo.Context) error
+	GetAllReservations(c *echo.Context) error
 }
 
 func NewHandler(service Service) Handler {
@@ -96,6 +99,76 @@ func (h *handler) GetMyReservations(c *echo.Context) error {
 	return c.JSON(http.StatusOK, httpResponse.Success{
 		Success: true,
 		Message: "My reservations retrieved successfully",
+		Data:    reservations,
+	})
+}
+func (h *handler) CancelReservation(c *echo.Context) error {
+	id := c.Param("id")
+	if id == "" {
+		return c.JSON(http.StatusBadRequest, httpResponse.Error{
+			Success: false,
+			Message: "Reservation ID is required",
+		})
+	}
+	reservationId, er := strconv.Atoi(id)
+	if er != nil {
+		return c.JSON(http.StatusBadRequest, httpResponse.Error{
+			Success: false,
+			Message: "Invalid reservation ID",
+			Errors:  er.Error(),
+		})
+	}
+
+	userId, ok := c.Get("userID").(uint)
+	if !ok {
+		return c.JSON(http.StatusInternalServerError, httpResponse.Error{
+			Success: false,
+			Message: "Failed to retrieve user ID from context",
+		})
+	}
+
+	err := h.service.CancelReservation(uint(reservationId), userId)
+	if err != nil {
+		statusCode := http.StatusInternalServerError
+		message := "Failed to cancel reservation"
+
+		switch {
+		case errors.Is(err, ErrReservationNotFound):
+			statusCode = http.StatusNotFound
+			message = "Reservation not found"
+		case errors.Is(err, ErrUnauthorized):
+			statusCode = http.StatusForbidden
+			message = "You are not authorized to cancel this reservation"
+		case errors.Is(err, ErrReservationNotActive):
+			statusCode = http.StatusConflict
+			message = "Reservation is not active and cannot be cancelled"
+		}
+
+		return c.JSON(statusCode, httpResponse.Error{
+			Success: false,
+			Message: message,
+			Errors:  err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, httpResponse.Success{
+		Success: true,
+		Message: "Reservation cancelled successfully",
+	})
+}
+func (h *handler) GetAllReservations(c *echo.Context) error {
+	reservations, err := h.service.GetAllReservations()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, httpResponse.Error{
+			Success: false,
+			Message: "Failed to retrieve reservations",
+			Errors:  err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, httpResponse.Success{
+		Success: true,
+		Message: "All reservations retrieved successfully",
 		Data:    reservations,
 	})
 }

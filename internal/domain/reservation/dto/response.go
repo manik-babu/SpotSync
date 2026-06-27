@@ -21,3 +21,16 @@ type Zone struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
 }
+type User struct {
+	Id    uint   `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+type AllReservationsResponse struct {
+	Id           uint   `json:"id"`
+	LicensePlate string `json:"license_plate"`
+	Status       string `json:"status"`
+	CreatedAt    string `json:"created_at"`
+	Zone         Zone   `json:"zone"`
+	User         User   `json:"user"`
+}

@@ -17,5 +17,7 @@ func RegisterRoutes(e *echo.Echo, db *gorm.DB, env *config.Env) {
 
 	api := e.Group("/api/v1/reservations")
 	api.POST("", handler.CreateReservation, middlewares.AuthMiddleware(jwtService, "admin", "driver"))
-	api.GET("", handler.GetMyReservations, middlewares.AuthMiddleware(jwtService, "admin", "driver"))
+	api.GET("/my-reservations", handler.GetMyReservations, middlewares.AuthMiddleware(jwtService, "admin", "driver"))
+	api.DELETE("/:id", handler.CancelReservation, middlewares.AuthMiddleware(jwtService, "admin", "driver"))
+	api.GET("", handler.GetAllReservations, middlewares.AuthMiddleware(jwtService, "admin"))
 }
