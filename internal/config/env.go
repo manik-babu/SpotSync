@@ -1,7 +1,6 @@
 package config
 
 import (
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -14,11 +13,11 @@ type Env struct {
 }
 
 func LoadEnv() *Env {
-	err := godotenv.Load()
+	_ = godotenv.Load()
 
-	if err != nil {
-		log.Fatal("Failed to load environment variables")
-	}
+	// if err != nil {
+	// 	log.Fatal("Failed to load environment variables")
+	// }
 	return &Env{
 		Port:      os.Getenv("PORT"),
 		Dsn:       os.Getenv("DSN"),
