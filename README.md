@@ -4,7 +4,7 @@
 
 A centralized platform for busy airports and malls to manage parking zones, with a focus on high-demand reservation of limited EV charging spots.
 
-Live URL: https://spotsync-api.vercel.app
+Live URL: https://spotsync-api.up.railway.app
 
 ## Overview
 
@@ -71,8 +71,7 @@ Create a `.env` file in the project root with:
 
 ```env
 PORT=8080
-DSN="host=YOUR_HOST user=YOUR_USER password=YOUR_PASSWORD dbname=spotsync port=5432 sslmode=disable TimeZone=Asia/Shanghai"
-
+DSN=your_database_connecting_string
 JWT_SECRET=your-strong-secret
 ```
 
