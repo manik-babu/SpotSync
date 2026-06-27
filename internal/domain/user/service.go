@@ -3,6 +3,7 @@ package user
 import (
 	"spotsync/internal/auth"
 	"spotsync/internal/domain/user/dto"
+	"time"
 )
 
 type service struct {
@@ -42,8 +43,8 @@ func (s *service) RegisterUser(req *dto.UserCreateRequest) (*dto.UserResponse, e
 		Name:      user.Name,
 		Email:     user.Email,
 		Role:      user.Role,
-		CreatedAt: user.CreatedAt.Format("2006-01-02 15:04:05"),
-		UpdatedAt: user.UpdatedAt.Format("2006-01-02 15:04:05"),
+		CreatedAt: user.CreatedAt.UTC().Format(time.RFC3339),
+		UpdatedAt: user.UpdatedAt.UTC().Format(time.RFC3339),
 	}
 	return &res, nil
 }
