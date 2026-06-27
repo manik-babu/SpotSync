@@ -1,8 +1,8 @@
 package reservation
 
 import (
-	"fmt"
 	"spotsync/internal/domain/reservation/dto"
+	"time"
 )
 
 type service struct {
@@ -19,23 +19,7 @@ func NewService(repo Repository) Service {
 	}
 }
 func (s *service) CreateReservation(req *dto.CreateReservationRequest, userId uint) (*dto.ReservationResponse, error) {
-	// Check if the parking zone exists
-	parkingZone, err := s.repo.GetParkingZoneByID(req.ZoneId)
-	if err != nil {
-		return nil, err
-	}
-	if parkingZone == nil {
-		return nil, fmt.Errorf("parking zone with ID %d not found", req.ZoneId)
-	}
-
-	reservation := Reservation{
-		UserId:       userId,
-		ZoneId:       req.ZoneId,
-		LicensePlate: req.LicensePlate,
-		Status:       "active",
-	}
-
-	err = s.repo.CreateReservation(&reservation)
+	reservation, err := s.repo.CreateReservationWithCapacityCheck(req, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -46,8 +30,8 @@ func (s *service) CreateReservation(req *dto.CreateReservationRequest, userId ui
 		ZoneId:       reservation.ZoneId,
 		LicensePlate: reservation.LicensePlate,
 		Status:       reservation.Status,
-		CreatedAt:    reservation.CreatedAt.Format("2006-01-02T15:04:05Z"),
-		UpdatedAt:    reservation.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		CreatedAt:    reservation.CreatedAt.UTC().Format(time.RFC3339),
+		UpdatedAt:    reservation.UpdatedAt.UTC().Format(time.RFC3339),
 	}
 
 	return &res, nil

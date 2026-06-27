@@ -1,8 +1,10 @@
 package parking
 
 import (
+	"fmt"
 	"spotsync/internal/auth"
 	"spotsync/internal/domain/parking/dto"
+	"time"
 )
 
 type service struct {
@@ -11,7 +13,7 @@ type service struct {
 }
 
 type Service interface {
-	CreateParkingZone(req *dto.CreateParkingZoneRequest) (*dto.ParkingZoneResponse, error)
+	CreateParkingZone(req *dto.CreateParkingZoneRequest) (*dto.CreatedParkingZoneResponse, error)
 	GetAllParkingZones() ([]dto.ParkingZoneResponse, error)
 	GetParkingZoneByID(id uint) (*dto.ParkingZoneResponse, error)
 }
@@ -22,7 +24,19 @@ func NewService(repo Repository) Service {
 	}
 }
 
-func (s *service) CreateParkingZone(req *dto.CreateParkingZoneRequest) (*dto.ParkingZoneResponse, error) {
+func formatUTCZulu(t time.Time) string {
+	return t.UTC().Format("2006-01-02T15:04:05Z")
+}
+
+func parseAndFormatUTCZulu(value string) (string, error) {
+	parsed, err := time.Parse(time.RFC3339Nano, value)
+	if err != nil {
+		return "", err
+	}
+	return formatUTCZulu(parsed), nil
+}
+
+func (s *service) CreateParkingZone(req *dto.CreateParkingZoneRequest) (*dto.CreatedParkingZoneResponse, error) {
 	parkingZone := ParkingZone{
 		Name:          req.Name,
 		Type:          req.Type,
@@ -33,14 +47,14 @@ func (s *service) CreateParkingZone(req *dto.CreateParkingZoneRequest) (*dto.Par
 	if err != nil {
 		return nil, err
 	}
-	res := dto.ParkingZoneResponse{
+	res := dto.CreatedParkingZoneResponse{
 		Id:            parkingZone.ID,
 		Name:          parkingZone.Name,
 		Type:          parkingZone.Type,
 		TotalCapacity: parkingZone.TotalCapacity,
 		PricePerHour:  parkingZone.PricePerHour,
-		CreatedAt:     parkingZone.CreatedAt.Format("2006-01-02T15:04:05Z"),
-		UpdatedAt:     parkingZone.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		CreatedAt:     formatUTCZulu(parkingZone.CreatedAt),
+		UpdatedAt:     formatUTCZulu(parkingZone.UpdatedAt),
 	}
 	return &res, nil
 
@@ -53,14 +67,18 @@ func (s *service) GetAllParkingZones() ([]dto.ParkingZoneResponse, error) {
 	}
 	var res []dto.ParkingZoneResponse
 	for _, parkingZone := range parkingZones {
+		createdAt, err := parseAndFormatUTCZulu(parkingZone.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
 		res = append(res, dto.ParkingZoneResponse{
-			Id:            parkingZone.ID,
-			Name:          parkingZone.Name,
-			Type:          parkingZone.Type,
-			TotalCapacity: parkingZone.TotalCapacity,
-			PricePerHour:  parkingZone.PricePerHour,
-			CreatedAt:     parkingZone.CreatedAt.Format("2006-01-02T15:04:05Z"),
-			UpdatedAt:     parkingZone.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+			Id:             parkingZone.Id,
+			Name:           parkingZone.Name,
+			Type:           parkingZone.Type,
+			TotalCapacity:  parkingZone.TotalCapacity,
+			AvailableSpots: parkingZone.AvailableSpots,
+			PricePerHour:   parkingZone.PricePerHour,
+			CreatedAt:      createdAt,
 		})
 	}
 	return res, nil
@@ -71,14 +89,19 @@ func (s *service) GetParkingZoneByID(id uint) (*dto.ParkingZoneResponse, error) 
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(parkingZone) // Debugging line
+	createdAt, err := parseAndFormatUTCZulu(parkingZone.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
 	res := dto.ParkingZoneResponse{
-		Id:            parkingZone.ID,
-		Name:          parkingZone.Name,
-		Type:          parkingZone.Type,
-		TotalCapacity: parkingZone.TotalCapacity,
-		PricePerHour:  parkingZone.PricePerHour,
-		CreatedAt:     parkingZone.CreatedAt.Format("2006-01-02T15:04:05Z"),
-		UpdatedAt:     parkingZone.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		Id:             parkingZone.Id,
+		Name:           parkingZone.Name,
+		Type:           parkingZone.Type,
+		TotalCapacity:  parkingZone.TotalCapacity,
+		AvailableSpots: parkingZone.AvailableSpots,
+		PricePerHour:   parkingZone.PricePerHour,
+		CreatedAt:      createdAt,
 	}
 	return &res, nil
 }

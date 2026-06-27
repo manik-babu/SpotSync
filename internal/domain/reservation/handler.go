@@ -1,6 +1,7 @@
 package reservation
 
 import (
+	"errors"
 	"net/http"
 	"spotsync/internal/domain/reservation/dto"
 	"spotsync/internal/httpResponse"
@@ -48,9 +49,21 @@ func (h *handler) CreateReservation(c *echo.Context) error {
 	}
 	res, err := h.service.CreateReservation(&req, userId)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, httpResponse.Error{
+		statusCode := http.StatusInternalServerError
+		message := "Failed to create reservation"
+
+		switch {
+		case errors.Is(err, ErrParkingZoneNotFound):
+			statusCode = http.StatusNotFound
+			message = "Parking zone not found"
+		case errors.Is(err, ErrParkingZoneFull):
+			statusCode = http.StatusConflict
+			message = "Parking zone is full"
+		}
+
+		return c.JSON(statusCode, httpResponse.Error{
 			Success: false,
-			Message: "Failed to create reservation",
+			Message: message,
 			Errors:  err.Error(),
 		})
 	}

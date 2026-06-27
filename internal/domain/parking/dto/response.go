@@ -11,7 +11,7 @@ package dto
 	    "updated_at": "2026-06-20T10:30:00Z"
 	  }
 */
-type ParkingZoneResponse struct {
+type CreatedParkingZoneResponse struct {
 	Id            uint    `json:"id"`
 	Name          string  `json:"name"`
 	Type          string  `json:"type"`
@@ -19,4 +19,13 @@ type ParkingZoneResponse struct {
 	PricePerHour  float64 `json:"price_per_hour"`
 	CreatedAt     string  `json:"created_at"`
 	UpdatedAt     string  `json:"updated_at"`
+}
+type ParkingZoneResponse struct {
+	Id             uint    `json:"id"`
+	Name           string  `json:"name"`
+	Type           string  `json:"type"`
+	TotalCapacity  uint    `json:"total_capacity"`
+	AvailableSpots uint    `json:"available_spots"`
+	PricePerHour   float64 `json:"price_per_hour"`
+	CreatedAt      string  `json:"created_at"`
 }
