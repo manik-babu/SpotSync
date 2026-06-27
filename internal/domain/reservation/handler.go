@@ -15,6 +15,7 @@ type handler struct {
 
 type Handler interface {
 	CreateReservation(c *echo.Context) error
+	GetMyReservations(c *echo.Context) error
 }
 
 func NewHandler(service Service) Handler {
@@ -72,5 +73,29 @@ func (h *handler) CreateReservation(c *echo.Context) error {
 		Success: true,
 		Message: "Reservation confirmed successfully",
 		Data:    res,
+	})
+}
+func (h *handler) GetMyReservations(c *echo.Context) error {
+	userId, ok := c.Get("userID").(uint)
+	if !ok {
+		return c.JSON(http.StatusInternalServerError, httpResponse.Error{
+			Success: false,
+			Message: "Failed to retrieve user ID from context",
+		})
+	}
+
+	reservations, err := h.service.GetMyReservations(userId)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, httpResponse.Error{
+			Success: false,
+			Message: "Failed to retrieve reservations",
+			Errors:  err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, httpResponse.Success{
+		Success: true,
+		Message: "My reservations retrieved successfully",
+		Data:    reservations,
 	})
 }

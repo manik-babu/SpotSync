@@ -11,6 +11,7 @@ type service struct {
 
 type Service interface {
 	CreateReservation(req *dto.CreateReservationRequest, userId uint) (*dto.ReservationResponse, error)
+	GetMyReservations(userId uint) ([]dto.MyReservationsResponse, error)
 }
 
 func NewService(repo Repository) Service {
@@ -35,4 +36,26 @@ func (s *service) CreateReservation(req *dto.CreateReservationRequest, userId ui
 	}
 
 	return &res, nil
+}
+func (s *service) GetMyReservations(userId uint) ([]dto.MyReservationsResponse, error) {
+	reservations, err := s.repo.GetMyReservations(userId)
+	if err != nil {
+		return nil, err
+	}
+	responses := make([]dto.MyReservationsResponse, len(reservations))
+	for i, reservation := range reservations {
+		responses[i] = dto.MyReservationsResponse{
+			Id:           reservation.ID,
+			LicensePlate: reservation.LicensePlate,
+			Status:       reservation.Status,
+			Zone: dto.Zone{
+				Id:   reservation.Zone.ID,
+				Name: reservation.Zone.Name,
+				Type: reservation.Zone.Type,
+			},
+			CreatedAt: reservation.CreatedAt.UTC().Format(time.RFC3339),
+		}
+	}
+
+	return responses, nil
 }
