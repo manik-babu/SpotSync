@@ -16,10 +16,9 @@ type Service interface {
 	GetParkingZoneByID(id uint) (*dto.ParkingZoneResponse, error)
 }
 
-func NewService(repo Repository, jwtService auth.JWTService) Service {
+func NewService(repo Repository) Service {
 	return &service{
-		repo:       repo,
-		jwtService: jwtService,
+		repo: repo,
 	}
 }
 

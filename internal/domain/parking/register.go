@@ -12,7 +12,7 @@ import (
 func RegisterRoutes(e *echo.Echo, db *gorm.DB, env *config.Env) {
 	repo := NewRepository(db)
 	jwtService := auth.NewJWTService(env.JwtSecret)
-	service := NewService(repo, jwtService)
+	service := NewService(repo)
 	handler := NewHandler(service)
 
 	api := e.Group("/api/v1/zones")
