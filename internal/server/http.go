@@ -40,8 +40,8 @@ func Start(db *gorm.DB, env *config.Env) {
 
 	e.GET("/", func(c *echo.Context) error {
 		return c.JSON(200, map[string]any{
-			"ok":      true,
-			"message": "Server running",
+			"success": true,
+			"message": "SpotSync server is running",
 		})
 	})
 	fmt.Println("Server running on http://localhost:" + env.Port)
